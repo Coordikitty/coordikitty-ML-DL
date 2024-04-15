@@ -87,6 +87,7 @@ try:
     base_url = "https://www.musinsa.com/categories/item/003002"
     driver.get(base_url)
     last_page = int(driver.find_element(By.XPATH,'//*[@id="goods_list"]/div[2]/div[4]/span/span[1]').text)
+    # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]')) #검색페이지에서
     idx = 1  # 이미지 인덱스
     while True:
         product_urls = []
@@ -117,6 +118,7 @@ try:
             break
         next_page_number = current_page_number + 1
         driver.execute_script(f"switchPage(document.f1,{next_page_number});")
+        # driver.execute_script(f'listSwitchPage(document.search_form,{next_page_number});') #검색페이지에서
 
 except Exception as e:
     print(e)
