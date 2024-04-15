@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+
 import json
 
 # 성별 정보를 추출하는 함수
@@ -30,14 +31,14 @@ def download_image_and_extract_info(image_url, folder_name, num, driver):
             file.write(response.content)
 
         product_info = {
-            "파일번호": num,
-            "파일이름": f"image_{num}.jpg",
-            "대분류":'하의',
-            "중분류":'긴바지',
-            "소분류":'데님',
-            "핏": [],
-            "계절": [],
-            "성별": None
+            "file_num": num,
+            "file_name": f"image_{num}.jpg",
+            "large_category":'하의',
+            "medium_category":'긴바지',
+            "small_category":'데님',
+            "fit": [],
+            "season": [],
+            "sex": None
         }
 
         try:
@@ -85,7 +86,7 @@ try:
     # 무신사 신상품 베스트 페이지 접속
     base_url = "https://www.musinsa.com/categories/item/003002"
     driver.get(base_url)
-
+    last_page = int(driver.find_element(By.XPATH,'//*[@id="goods_list"]/div[2]/div[4]/span/span[1]').text)
     idx = 1  # 이미지 인덱스
     while True:
         product_urls = []
@@ -111,22 +112,11 @@ try:
 
         # 다음 페이지로 이동, 페이지가 10의 자리일 때 로직 포함
         current_page_number = int(driver.find_element(By.CSS_SELECTOR, '.paging-btn.btn.active').text)
+        if current_page_number==last_page:
+            print("crawl done")
+            break
         next_page_number = current_page_number + 1
-        
-        if current_page_number % 10 == 0:  # 현재 페이지가 10의 배수일 경우 다음 페이지 버튼 클릭
-            try:
-                next_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.fa.fa-angle-right.paging-btn.btn.next')))
-                next_button.click()
-            except (NoSuchElementException, TimeoutException):
-                print("No more pages to navigate.")
-                break
-        else:  # 현재 페이지가 10의 배수가 아닐 경우
-            try:
-                next_button = wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[@onclick='switchPage(document.f1,{next_page_number}); return false;']")))
-                next_button.click()
-            except (NoSuchElementException, TimeoutException):
-                print("No more pages to navigate.")
-                break
+        driver.execute_script(f"switchPage(document.f1,{next_page_number});")
 
 except Exception as e:
     print(e)
