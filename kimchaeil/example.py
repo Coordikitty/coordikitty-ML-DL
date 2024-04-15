@@ -32,6 +32,9 @@ def download_image_and_extract_info(image_url, folder_name, num, driver):
         product_info = {
             "파일번호": num,
             "파일이름": f"image_{num}.jpg",
+            "대분류":'하의',
+            "중분류":'긴바지',
+            "소분류":'데님',
             "핏": [],
             "계절": [],
             "성별": None
