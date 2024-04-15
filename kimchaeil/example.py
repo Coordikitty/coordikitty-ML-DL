@@ -49,18 +49,18 @@ def download_image_and_extract_info(image_url, folder_name, num, driver):
                 if th_text == '핏':
                     fit_values = row.find_elements(By.CLASS_NAME, 'product-detail__sc-17fds8k-5.gpXliU')
                     for fit_value in fit_values:
-                        product_info['핏'].append(fit_value.text)
+                        product_info['fit'].append(fit_value.text)
                 elif th_text == '계절':
                     season_values = row.find_elements(By.CLASS_NAME, 'product-detail__sc-17fds8k-5.gpXliU')
                     for season_value in season_values:
-                        product_info['계절'].append(season_value.text)
+                        product_info['season'].append(season_value.text)
         except NoSuchElementException:
             print("Failed to extract fit and season information.")
-            product_info['핏'].append('NaN')
-            product_info['계절'].append('NaN')
+            product_info['fit'].append('NaN')
+            product_info['season'].append('NaN')
 
         # 성별 정보 추출
-        product_info['성별'] = extract_gender_info(driver)
+        product_info['sex'] = extract_gender_info(driver)
 
         # JSON 파일로 저장
         if not os.path.exists('musinsa_labeling'):
