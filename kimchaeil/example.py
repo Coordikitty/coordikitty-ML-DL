@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import time
 
 import json
 
@@ -84,11 +85,13 @@ wait = WebDriverWait(driver, 10)  # 최대 10초 대기
 
 try:
     # 무신사 신상품 베스트 페이지 접속
-    base_url = "https://www.musinsa.com/categories/item/003002"
+    current_page_number=175
+    base_url = f"https://www.musinsa.com/categories/item/003002?d_cat_cd=003002&brand=&list_kind=small&sort=pop_category&sub_sort=&page={current_page_number}&display_cnt=90&exclusive_yn=&sale_goods=&timesale_yn=&ex_soldout=&plusDeliveryYn=&kids=&color=&price1=&price2=&shoeSizeOption=&tags=&campaign_id=&includeKeywords=&measure="
     driver.get(base_url)
     last_page = int(driver.find_element(By.XPATH,'//*[@id="goods_list"]/div[2]/div[4]/span/span[1]').text)
+    print(f"last_page={last_page}")
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]')) #검색페이지에서
-    idx = 1  # 이미지 인덱스
+    idx = 15657  # 이미지 인덱스
     while True:
         product_urls = []
         # 각 제품의 상세 페이지로 이동하는 링크 찾기
@@ -104,23 +107,44 @@ try:
                 print(f"Downloading {first_image_src}")
                 # 이미지 다운로드 및 정보 추출
                 download_image_and_extract_info(first_image_src, 'musinsa_product_images', idx, driver)
+                print(f"image{idx} done")
                 idx += 1
             except TimeoutException:
                 print(f"Image loading timed out for {product_url}")
             finally:
                 # 상세 페이지에서 작업을 마치고 원래 페이지로 돌아감
                 driver.back()
+            time.sleep(1)
 
         # 다음 페이지로 이동, 페이지가 10의 자리일 때 로직 포함
-        current_page_number = int(driver.find_element(By.CSS_SELECTOR, '.paging-btn.btn.active').text)
+        # current_page_number = int(driver.find_element(By.CSS_SELECTOR, '.paging-btn.btn.active').text)
         if current_page_number==last_page:
             print("crawl done")
             break
-        next_page_number = current_page_number + 1
-        driver.execute_script(f"switchPage(document.f1,{next_page_number});")
-        # driver.execute_script(f'listSwitchPage(document.search_form,{next_page_number});') #검색페이지에서
-
+        current_page_number = current_page_number + 1
+        print(f"page move to {current_page_number}")
+        base_url = f"https://www.musinsa.com/categories/item/003002?d_cat_cd=003002&brand=&list_kind=small&sort=pop_category&sub_sort=&page={current_page_number}&display_cnt=90&exclusive_yn=&sale_goods=&timesale_yn=&ex_soldout=&plusDeliveryYn=&kids=&color=&price1=&price2=&shoeSizeOption=&tags=&campaign_id=&includeKeywords=&measure="
+        driver.get(base_url)
+    
 except Exception as e:
     print(e)
 finally:
     driver.quit()  # 브라우저 닫기
+
+        # if current_page_number % 10 == 0:  # 현재 페이지가 10의 배수일 경우 다음 페이지 버튼 클릭
+        #     try:
+        #         driver.execute_script(f"switchPage(document.f1,{next_page_number});")
+        #     except (NoSuchElementException, TimeoutException):
+        #         print("No more pages to navigate.")
+        #         break
+        # else:  # 현재 페이지가 10의 배수가 아닐 경우
+        #     try:
+        #         next_button = wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[@onclick='switchPage(document.f1,{next_page_number}); return false;']")))
+        #         next_button.click()
+        #     except (NoSuchElementException, TimeoutException):
+        #         try:
+        #             driver.execute_script(f"switchPage(document.f1,{next_page_number});")
+        #         except:
+        #             print("No more pages to navigate.")
+        #             break
+        # driver.execute_script(f'listSwitchPage(document.search_form,{next_page_number});') #검색페이지에서
