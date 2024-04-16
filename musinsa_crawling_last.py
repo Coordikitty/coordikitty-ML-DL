@@ -73,7 +73,7 @@ def download_image_and_extract_info(image_url, folder_name, num, driver):
         print(f"Failed to download {image_url}")
         
 # Chrome Driver 경로 설정
-chrome_driver_path = "C:/Users/mkmy7/OneDrive/바탕 화면/chromedriver-win64/chromedriver.exe"  # 사용자의 ChromeDriver 경로로 변경하세요.
+chrome_driver_path = ""  # 사용자의 ChromeDriver 경로로 변경하세요.
 service = Service(executable_path=chrome_driver_path)
 driver = webdriver.Chrome(service=service)
 
