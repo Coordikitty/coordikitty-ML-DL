@@ -25,18 +25,16 @@ def extract_gender_info(driver):
 def download_image_and_extract_info(image_url, folder_name, num, driver):
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
+        
     response = requests.get(image_url)
+    
     if response.status_code == 200:
-        image_file_path = os.path.join(folder_name, f"image_{num}.jpg")
-        with open(image_file_path, 'wb') as file:
-            file.write(response.content)
-
         product_info = {
             "file_num": num,
             "file_name": f"image_{num}.jpg",
             "large_category":'하의',
             "medium_category":'긴바지',
-            "small_category":'슬랙스',
+            "small_category":'스웨트',
             "fit": [],
             "season": [],
             "sex": None
@@ -62,18 +60,29 @@ def download_image_and_extract_info(image_url, folder_name, num, driver):
 
         # 성별 정보 추출
         product_info['sex'] = extract_gender_info(driver)
+        
+        # 'fit'과 'season' 정보가 모두 'NaN'인지 확인
+        if product_info['fit'] == ['NaN'] and product_info['season'] == ['NaN']:
+            print("Fit and season information missing. Skipping file download.")
+            return False
 
         # JSON 파일로 저장
         if not os.path.exists('musinsa_labeling'):
             os.makedirs('musinsa_labeling')
         with open(os.path.join('musinsa_labeling', f"{num}_label.json"), 'w', encoding='utf-8') as json_file:
             json.dump(product_info, json_file, ensure_ascii=False, indent=4)
-
+        
+        #이미지 추출   
+        image_file_path = os.path.join(folder_name, f"image_{num}.jpg")
+        with open(image_file_path, 'wb') as file:
+            file.write(response.content)
+        return True
     else:
         print(f"Failed to download {image_url}")
+        return False
         
 # Chrome Driver 경로 설정
-chrome_driver_path = ""  # 사용자의 ChromeDriver 경로로 변경하세요.
+chrome_driver_path = "C:/Users/mkmy7/OneDrive/바탕 화면/chromedriver-win64/chromedriver.exe"  # 사용자의 ChromeDriver 경로로 변경하세요.
 service = Service(executable_path=chrome_driver_path)
 driver = webdriver.Chrome(service=service)
 
@@ -86,11 +95,13 @@ wait = WebDriverWait(driver, 10)  # 최대 10초 대기
 try:
     # 무신사 신상품 베스트 페이지 접속
     current_page_number=1
-    base_url = f"https://www.musinsa.com/categories/item/003002?d_cat_cd=003002&brand=&list_kind=small&sort=pop_category&sub_sort=&page={current_page_number}&display_cnt=90&exclusive_yn=&sale_goods=&timesale_yn=&ex_soldout=&plusDeliveryYn=&kids=&color=&price1=&price2=&shoeSizeOption=&tags=&campaign_id=&includeKeywords=&measure="
+    
+    base_url = f"https://www.musinsa.com/search/musinsa/goods?q=%EC%8A%A4%EC%9B%A8%ED%8A%B8%ED%8C%AC%EC%B8%A0&list_kind=small&sortCode=pop&sub_sort=&page={current_page_number}&display_cnt=0&saleGoods=&includeSoldOut=&setupGoods=&popular=&category1DepthCode=&category2DepthCodes=&category3DepthCodes=&selectedFilters=&category1DepthName=&category2DepthName=&brandIds=&price=&colorCodes=&contentType=&styleTypes=&includeKeywords=&excludeKeywords=&originalYn=N&tags=&campaignId=&serviceType=&eventType=&type=&season=&measure=&openFilterLayout=N&selectedOrderMeasure=&shoeSizeOption=&d_cat_cd=&attribute=&plusDeliveryYn="
     driver.get(base_url)
     last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]').text)
     print(f"last_page={last_page}")
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]')) #검색페이지에서
+    
     idx = 1  # 이미지 인덱스
     while True:
         product_urls = []
@@ -105,10 +116,14 @@ try:
                 first_image = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'img[src*="goods_img"]')))
                 first_image_src = first_image.get_attribute('src')
                 print(f"Downloading {first_image_src}")
+                
                 # 이미지 다운로드 및 정보 추출
-                download_image_and_extract_info(first_image_src, 'musinsa_product_images', idx, driver)
-                print(f"image{idx} done")
-                idx += 1
+                if download_image_and_extract_info(first_image_src, 'musinsa_product_images', idx, driver):
+                    print(f"image{idx} done")
+                    idx += 1
+                else:
+                    print(f"Skipping image{idx} due to missing information")
+                    
             except TimeoutException:
                 print(f"Image loading timed out for {product_url}")
             finally:
@@ -123,9 +138,9 @@ try:
             break
         current_page_number = current_page_number + 1
         print(f"page move to {current_page_number}")
-        base_url = f"https://www.musinsa.com/search/musinsa/goods?q=%EC%8A%AC%EB%9E%99%EC%8A%A4&list_kind=small&sortCode=pop&sub_sort=&page={current_page_number}&display_cnt=0&saleGoods=false&includeSoldOut=false&setupGoods=false&popular=false&category1DepthCode=&category2DepthCodes=&category3DepthCodes=&selectedFilters=&category1DepthName=&category2DepthName=&brandIds=&price=&colorCodes=&contentType=&styleTypes=&includeKeywords=&excludeKeywords=&originalYn=N&tags=&campaignId=&serviceType=&eventType=&type=&season=&measure=&openFilterLayout=N&selectedOrderMeasure=&shoeSizeOption=&d_cat_cd=&attribute=&plusDeliveryYn="
+        base_url = f"https://www.musinsa.com/search/musinsa/goods?q=%EC%8A%A4%EC%9B%A8%ED%8A%B8%ED%8C%AC%EC%B8%A0&list_kind=small&sortCode=pop&sub_sort=&page={current_page_number}&display_cnt=0&saleGoods=&includeSoldOut=&setupGoods=&popular=&category1DepthCode=&category2DepthCodes=&category3DepthCodes=&selectedFilters=&category1DepthName=&category2DepthName=&brandIds=&price=&colorCodes=&contentType=&styleTypes=&includeKeywords=&excludeKeywords=&originalYn=N&tags=&campaignId=&serviceType=&eventType=&type=&season=&measure=&openFilterLayout=N&selectedOrderMeasure=&shoeSizeOption=&d_cat_cd=&attribute=&plusDeliveryYn="
         driver.get(base_url)
 except Exception as e:
     print(e)
 finally:
-    driver.quit()  # 브라우저 닫기
+    driver.quit()  # 브라우저 닫기 
