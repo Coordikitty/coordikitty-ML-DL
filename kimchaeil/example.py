@@ -42,10 +42,12 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
             "file_name": f"image_{num}.jpg",
             "large_category":'하의',
             "medium_category":'긴바지',
-            "small_category":'슬랙스',
+            "small_category":'데님',
             "fit": [],
             "season": [],
-            "sex": None
+            "sex": None,
+            "major_style":"캐주얼",
+            "minor_style":None
         }
         try:
             tbody = driver.find_element(By.CSS_SELECTOR, '#root > div.product-detail__sc-8631sn-0.gJskhq > div.product-detail__sc-8631sn-1.fPAiGD > div.product-detail__sc-8631sn-3.jKqPJk > div.product-detail__sc-17fds8k-0.PpQGA > table > tbody')
@@ -94,7 +96,8 @@ try:
     driver.get(base_url)
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]').text)
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]')) #검색페이지에서
-    last_page = int(driver.find_element(By.CLASS_NAME,'totalPagingNum').text)
+    # last_page = int(driver.find_element(By.CLASS_NAME,'totalPagingNum').text)
+    last_page = 12
     print(f"last_page={last_page}")
     idx = 1  # 이미지 인덱스
     while True:
