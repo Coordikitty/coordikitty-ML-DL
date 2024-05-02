@@ -25,16 +25,13 @@ def extract_gender_info(driver):
 def download_image_and_extract_info(image_url_list, folder_name, num, driver):
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
-    img_cnt = 0
     img_success = False
+    img_list = []
     for image_url in image_url_list:
         response = requests.get(image_url)
         if response.status_code == 200:
             img_success = True
-            image_file_path = os.path.join(folder_name, f"image_{num}_{img_cnt}.jpg")
-            with open(image_file_path, 'wb') as file:
-                file.write(response.content)
-            img_cnt += 1
+            img_list.append(response.content)
         
     if img_success:
         product_info = {
@@ -46,8 +43,8 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
             "fit": [],
             "season": [],
             "sex": None,
-            "major_style":"캐주얼",
-            "minor_style":None
+            "major_style": "캐주얼",
+            "minor_style": None
         }
         try:
             tbody = driver.find_element(By.CSS_SELECTOR, '#root > div.product-detail__sc-8631sn-0.gJskhq > div.product-detail__sc-8631sn-1.fPAiGD > div.product-detail__sc-8631sn-3.jKqPJk > div.product-detail__sc-17fds8k-0.PpQGA > table > tbody')
@@ -69,14 +66,29 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
 
         # 성별 정보 추출
         product_info['sex'] = extract_gender_info(driver)
+        
+        # 'fit'과 'season' 정보가 모두 'NaN'인지 확인
+        if product_info['fit'] == ['NaN'] and product_info['season'] == ['NaN']:
+            print("Fit and season information missing. Skipping file download.")
+            return False
 
         # JSON 파일로 저장
         if not os.path.exists('musinsa_labeling'):
             os.makedirs('musinsa_labeling')
         with open(os.path.join('musinsa_labeling', f"{num}_label.json"), 'w', encoding='utf-8') as json_file:
             json.dump(product_info, json_file, ensure_ascii=False, indent=4)
+
+        img_cnt = 0
+        for content in img_list:
+            image_file_path = os.path.join(folder_name, f"image_{num}_{img_cnt}.jpg")
+            with open(image_file_path, 'wb') as file:
+                file.write(content)
+            img_cnt += 1
+        return True
+    
     else:
         print(f"Failed to download {image_url}")
+        return False
         
 # Chrome Driver 경로 설정
 chrome_driver_path = "C:/Users/rlaco/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe"  # 사용자의 ChromeDriver 경로로 변경하세요.
@@ -132,9 +144,12 @@ try:
                     src_values.append(img.get_attribute('src'))
 
                 # 이미지 다운로드 및 정보 추출
-                download_image_and_extract_info(src_values, 'musinsa_product_images', idx, driver)
-                print(f"image{idx} done")
-                idx += 1
+                if download_image_and_extract_info(src_values, 'musinsa_product_images', idx, driver):
+                    print(f"image{idx} done")
+                    idx += 1
+                else:
+                    print(f"Skipping image{idx} due to missing information")
+                    
             except TimeoutException:
                 print(f"Image loading timed out for {product_url}")
             finally:
