@@ -87,7 +87,7 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
         return True
     
     else:
-        print(f"Failed to download {image_url}")
+        print(f"Failed to download")
         return False
         
 # Chrome Driver 경로 설정
