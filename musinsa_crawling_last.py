@@ -42,6 +42,7 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
             "small_category":'데님',
             "fit": [],
             "season": [],
+            "thickness": [],
             "sex": None,
             "major_style": "캐주얼",
             "minor_style": None
@@ -59,17 +60,22 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
                     season_values = row.find_elements(By.CLASS_NAME, 'product-detail__sc-17fds8k-5.gpXliU')
                     for season_value in season_values:
                         product_info['season'].append(season_value.text)
+                elif th_text == '두께':
+                    thickness_values = row.find_elements(By.CLASS_NAME, 'product-detail__sc-17fds8k-5.gpXliU')
+                    for thickness_value in thickness_values:
+                        product_info['thickness'].append(thickness_value.text)        
         except NoSuchElementException:
             print("Failed to extract fit and season information.")
             product_info['fit'].append('NaN')
             product_info['season'].append('NaN')
+            product_info['thickness'].append('NaN')
 
         # 성별 정보 추출
         product_info['sex'] = extract_gender_info(driver)
         
         # 'fit'과 'season' 정보가 모두 'NaN'인지 확인
-        if product_info['fit'] == ['NaN'] and product_info['season'] == ['NaN']:
-            print("Fit and season information missing. Skipping file download.")
+        if product_info['fit'] == ['NaN'] and product_info['season'] == ['NaN'] and product_info['thickness'] == ['NaN']:
+            print("Fit, season and thickness information missing. Skipping file download.")
             return False
 
         # JSON 파일로 저장
@@ -91,7 +97,7 @@ def download_image_and_extract_info(image_url_list, folder_name, num, driver):
         return False
         
 # Chrome Driver 경로 설정
-chrome_driver_path = "C:\Users\mkmy7\OneDrive\바탕 화면\chromedriver-win64/chromedriver.exe"  # 사용자의 ChromeDriver 경로로 변경하세요.
+chrome_driver_path = "C:/Users/mkmy7/OneDrive/바탕 화면/chromedriver-win64/chromedriver.exe"  # 사용자의 ChromeDriver 경로로 변경하세요.
 service = Service(executable_path=chrome_driver_path)
 driver = webdriver.Chrome(service=service)
 
@@ -104,12 +110,12 @@ wait = WebDriverWait(driver, 10)  # 최대 10초 대기
 try:
     # 무신사 신상품 베스트 페이지 접속
     current_page_number=1
-    base_url = f"https://www.musinsa.com/categories/item/003002?d_cat_cd=003002&brand=&list_kind=small&sort=pop_category&sub_sort=&page={current_page_number}&display_cnt=90&exclusive_yn=&sale_goods=&timesale_yn=&ex_soldout=&plusDeliveryYn=&kids=&color=&price1=&price2=&shoeSizeOption=&tags=&campaign_id=&includeKeywords=&measure="
+    base_url = f"https://www.musinsa.com/search/musinsa/goods?q=%EC%8A%AC%EB%9E%99%EC%8A%A4&list_kind=small&sortCode=pop&sub_sort=&page={current_page_number}&display_cnt=0&saleGoods=&includeSoldOut=&setupGoods=&popular=&category1DepthCode=&category2DepthCodes=&category3DepthCodes=&selectedFilters=&category1DepthName=&category2DepthName=&brandIds=&price=&colorCodes=&contentType=&styleTypes=&includeKeywords=&excludeKeywords=&originalYn=N&tags=&campaignId=&serviceType=&eventType=&type=&season=&measure=&openFilterLayout=N&selectedOrderMeasure=&shoeSizeOption=&d_cat_cd=&attribute=&plusDeliveryYn="
     driver.get(base_url)
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]').text)
     # last_page = int(driver.find_element(By.XPATH,'//*[@id="goodsList"]/div[4]/span/span[1]')) #검색페이지에서
     # last_page = int(driver.find_element(By.CLASS_NAME,'totalPagingNum').text)
-    last_page = 12
+    last_page = 20
     print(f"last_page={last_page}")
     idx = 1  # 이미지 인덱스
     while True:
