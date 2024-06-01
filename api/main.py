@@ -121,5 +121,12 @@ async def categorization(file: UploadFile):
         answer['samll'] = 'BOTTOMS_LONG_DENIM'
     elif predicted_category_s == 1:
         answer['samll'] =  'BOTTOMS_LONG_SWEAT'
+        
+    answer['fit'] = 'SKINNY'
+    answer['gender'] = 'MALE'
+    answer['style'] = 'FORMAL'
 
     return answer
+
+
+# uvicorn main:app --reload
