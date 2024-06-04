@@ -130,3 +130,6 @@ async def categorization(file: UploadFile):
 
 
 # uvicorn main:app --reload
+
+# pip install fastapi
+# pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
