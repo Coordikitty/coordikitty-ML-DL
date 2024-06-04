@@ -93,7 +93,7 @@ def cal_clothes_score(temperature, closet): #옷 점수 계산
             score = -float('inf')
             for temp_range in temperature_ranges_by_cloth[cloth["medium_category"]][cloth["thickness"][0]]:
                 score = max(score,-abs(temp_idx-temperature_range.index(temp_range)))
-            if(score>=-2):
+            if(score>=-1): #적정 온도 차이
                 appropriate_clothes[category].append(cloth)
                 clothes_score[category].append(score)
 
@@ -196,7 +196,7 @@ def calculate_similarity(base_dir_path, cloth_file_names, dir_path):
                 similarity = cos(base_feature[0],target_features).item()
                 similarity_scores[cloth_file_name]=similarity
             
-            for top_2_image in sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:2]:
+            for top_2_image in sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:1]: #상하의 각각 유사도 top
                 top2_images_TNB[base_feature[1]].append(top_2_image)
         
         top3_coordi_by_one_base=[]
@@ -204,23 +204,23 @@ def calculate_similarity(base_dir_path, cloth_file_names, dir_path):
             for top_2_bottom in top2_images_TNB["하의"]:
                 top3_coordi_by_one_base.append((top_2_top[0], top_2_bottom[0], (top_2_top[1]+top_2_bottom[1])/2 ))
         
-        top3_coordi_by_one_base.sort(key=lambda x: x[-1], reverse=True)
+        top3_coordi_by_one_base.sort(key=lambda x: x[-1], reverse=True) #한 게시글 유사도 top
         # for coordi_by_one_base in top3_coordi_by_one_base[:3]:
         # top3_coordi.extend(top3_coordi_by_one_base)
         top3_coordi.append(top3_coordi_by_one_base[0])
 
-    top3_coordi.sort(key=lambda x: x[-1],reverse=True)
+    top3_coordi.sort(key=lambda x: x[-1],reverse=True) #전체 유사도 top
     for top_coordi in top3_coordi[:3]:
         print(f"추천 코디:{top_coordi[0]}, {top_coordi[1]} / 점수: {top_coordi[2]}")
 
 def main():
-    temperature = round(float(input("-현재 온도 입력: ")))
+    temperature = round(float(input("\n-현재 온도 입력: ")))
     print("\n<스타일 목록>")
     print("[캐주얼, 미니멀, 스트릿, 스포티, 포멀]")
     user_style = input("-스타일 선택: ")
     print()
 
-    dir_path="비슷한_이미지_선별_모음"
+    dir_path="사용자1옷장"
     base_dir_path = "스타일 코디 모음집/"+user_style+'/'
 
     closet = load_closet(dir_path)
@@ -229,8 +229,19 @@ def main():
     if not (suitable_clothes_by_temperature["상의"] and suitable_clothes_by_temperature["하의"]):
         print("현재 온도에 적합한 상의 또는 하의가 없습니다.")
         return
-    cloth_file_names = {"상의":[cloth['file_name'] for cloth in suitable_clothes_by_temperature['상의']],
-                         "하의":[cloth['file_name'] for cloth in suitable_clothes_by_temperature['하의']]}
+    
+    # 스타일에 맞는 옷 필터링
+    suitable_clothes_by_style = {
+        "상의": [cloth for cloth in suitable_clothes_by_temperature["상의"] if cloth["major_style"] == user_style or cloth["minor_style"] == user_style],
+        "하의": [cloth for cloth in suitable_clothes_by_temperature["하의"] if cloth["major_style"] == user_style or cloth["minor_style"] == user_style]
+    }
+
+    if not (suitable_clothes_by_style["상의"] and suitable_clothes_by_style["하의"]):
+        print("선택한 스타일에 적합한 상의 또는 하의가 없습니다.")
+        return
+
+    cloth_file_names = {"상의":[cloth['file_name'] for cloth in suitable_clothes_by_style['상의']],
+                         "하의":[cloth['file_name'] for cloth in suitable_clothes_by_style['하의']]}
     
     calculate_similarity(base_dir_path, cloth_file_names, dir_path)
 
