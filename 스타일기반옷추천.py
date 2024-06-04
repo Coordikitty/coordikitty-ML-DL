@@ -221,7 +221,7 @@ def main():
     print()
 
     dir_path="사용자1옷장"
-    base_dir_path = "스타일 코디 모음집/"+user_style+'/'
+    base_dir_path = "스타일 코디 모음집/"+user_style+'/'    # 최신 트렌드 반영 모델 사진 (풀착장)
 
     closet = load_closet(dir_path)
     suitable_clothes_by_temperature = cal_clothes_score(temperature,closet)
