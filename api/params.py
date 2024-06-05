@@ -3,7 +3,7 @@ import torch
 from torchvision import transforms
 
 # CUDA
-device_ = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 데이터 전처리
 transform = transforms.Compose([

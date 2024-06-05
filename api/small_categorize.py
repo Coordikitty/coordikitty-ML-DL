@@ -2,7 +2,7 @@ import torch
 from torchvision import models
 import pandas as pd
 
-from params import device_, transform
+from params import device, transform
 
 소분류_pth = 'C:/Users/lhj30/OneDrive/4-1/MIDAS/model/model_resnet50_소분류.pth'
 소분류_cvs = 'C:/Users/lhj30/OneDrive/4-1/MIDAS/model/소분류(데님,스웨트).csv'
@@ -13,11 +13,11 @@ def small_categorize():
     model_s = models.resnet50(weights=False)
     num_ftrs = model_s.fc.in_features
     model_s.fc = torch.nn.Linear(num_ftrs, 3)  # 체크포인트와 일치하도록 클래스 수를 3으로 변경
-    model_s = model_s.to(device_)
+    model_s = model_s.to(device)
 
     # 모델 로드
     checkpoint_path = 소분류_pth
-    checkpoint = torch.load(checkpoint_path, map_location=device_)
+    checkpoint = torch.load(checkpoint_path, map_location=device)
     model_s.load_state_dict(checkpoint['model_state_dict'])
     model_s.eval()
 
@@ -29,7 +29,7 @@ def small_categorize():
 
     def predict_image_category_s(image):
         # image = Image.open(image_path)
-        image = transform(image).unsqueeze(0).to(device_)
+        image = transform(image).unsqueeze(0).to(device)
         
         with torch.no_grad():
             outputs = model_s(image)
