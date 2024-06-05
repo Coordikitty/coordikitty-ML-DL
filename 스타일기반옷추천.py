@@ -1,17 +1,23 @@
+from typing import List
 import numpy as np
 import os
 import json
+from pydantic import BaseModel
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torchvision.models import resnext101_64x4d
 from PIL import Image
+from fastapi import Body, FastAPI
+from firebase_admin import credentials, initialize_app, storage
+import requests
+from io import BytesIO
 
 #GPU설정
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # YOLOv5 모델 로드
-yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path="상하의분리모델/상하의_detection_yolov5s.pt")
+yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path="상하의_detection_yolov5s.pt")
 yolo_model.to(device).eval()
 
 temperature_ranges_by_cloth = {
@@ -245,5 +251,25 @@ def main():
     
     calculate_similarity(base_dir_path, cloth_file_names, dir_path)
 
-if __name__ == "__main__":
-    main()
+
+cred = credentials.Certificate("coordikitty-firebase-adminsdk-1ld5i-c4f40d3461.json")
+initialize_app(cred, {
+    'storageBucket': "coordikitty.appspot.com" 
+})
+bucket = storage.bucket()
+app = FastAPI()
+local_file_path = '1.png'
+
+class RecommendRequestDto(BaseModel):
+    clothImages: List[str]
+    temperature: int
+    style: str
+
+@app.post("/recommend")
+async def categorization(recommendDto: RecommendRequestDto = Body(...)):
+
+    for clothImgUrl in recommendDto.clothImages:
+        response = requests.get(clothImgUrl, stream=True)
+        if response.status_code == 200:
+            image = Image.open(BytesIO(response.content))
+    cal_clothes_score(temperature,closet)
