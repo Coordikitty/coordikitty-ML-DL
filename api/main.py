@@ -1,10 +1,11 @@
 from fastapi import FastAPI, UploadFile
 
+from PIL import Image
+import io
+
 import torch
 from torchvision import transforms, models
 import pandas as pd
-from PIL import Image
-import io
 
 소분류_pth = 'C:/Users/lhj30/OneDrive/4-1/MIDAS/model/model_resnet50_소분류.pth'
 중분류_pth = 'C:/Users/lhj30/OneDrive/4-1/MIDAS/model/model_resnet50_중분류.pth'
