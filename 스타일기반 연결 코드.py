@@ -15,6 +15,14 @@ from io import BytesIO
 #GPU설정
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+class RecommendRequestDto(BaseModel):
+    clothImages: str
+    temperature: int
+    style: str
+    large: str
+    medium: str
+    thickness: str
+
 # YOLOv5 모델 로드
 yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path="상하의_detection_yolov5s.pt")
 yolo_model.to(device).eval()
@@ -59,15 +67,20 @@ temperature_ranges_by_cloth = {
 
 temperature_range=[(28, float('inf')), (23, 27), (20, 22), (17, 19), (12, 16), (9, 11), (5, 8), (-float('inf'), 4)]
 
-def load_closet(dir_path):
+def load_closet(recommendDto: List[RecommendRequestDto]):
     closet = {"TOPS":[],"BOTTOMS":[]}
-    json_files = [pos_json for pos_json in os.listdir(dir_path) if pos_json.endswith('.json')]
-    for json_file in json_files:
-        file_path = os.path.join(dir_path, json_file)
-        with open(file_path,'r',encoding='utf-8') as file:
-            json_data = json.load(file)
-            large_category, extracted_data = extract_data_from_json(json_data)
-            closet[large_category].append(extracted_data)
+    for cloth in recommendDto:
+        if(cloth.large=="TOPS"):
+            print()
+        elif(cloth.large=="BOTTOMS"):
+            print()
+    # json_files = [pos_json for pos_json in os.listdir(dir_path) if pos_json.endswith('.json')]
+    # for json_file in json_files:
+    #     file_path = os.path.join(dir_path, json_file)
+    #     with open(file_path,'r',encoding='utf-8') as file:
+    #         json_data = json.load(file)
+    #         large_category, extracted_data = extract_data_from_json(json_data)
+    #         closet[large_category].append(extracted_data)
     return closet
 
 def extract_data_from_json(json_data):
@@ -218,16 +231,16 @@ def calculate_similarity(base_dir_path, cloth_file_names, dir_path):
     for top_coordi in top3_coordi[:3]:
         print(f"추천 코디:{top_coordi[0]}, {top_coordi[1]} / 점수: {top_coordi[2]}")
 
-def main(temperature, recommendDto):
-    print("\n<스타일 목록>")
-    print("[FORMAL, MINIMALISTIC, CASUAL, STREET, SPORTS]")
-    user_style = input("-스타일 선택: ")
-    print()
+def main(temperature, recommendDto: List[RecommendRequestDto]):
+    #print("\n<스타일 목록>")
+    #print("[FORMAL, MINIMALISTIC, CASUAL, STREET, SPORTS]")
+    user_style = recommendDto[0].style
+    print()#
 
     dir_path="사용자1옷장"
     base_dir_path = "스타일 코디 모음집/"+user_style+'/'    # 최신 트렌드 반영 모델 사진 (풀착장)
 
-    closet = load_closet(dir_path)
+    closet = load_closet(recommendDto)
     suitable_clothes_by_temperature = cal_clothes_score(temperature,closet)
 
     if not (suitable_clothes_by_temperature["TOPS"] and suitable_clothes_by_temperature["BOTTOMS"]):
@@ -260,20 +273,13 @@ bucket = storage.bucket()
 app = FastAPI()
 local_file_path = '1.png'
 
-class RecommendRequestDto(BaseModel):
-    clothImages: str
-    temperature: int
-    style: str
-    large: str
-    medium: str
-    thickness: str
 
 @app.post("/recommend")
 async def categorization(recommendDto: List[RecommendRequestDto] = Body(...)):
     main(recommendDto[0].temperature, recommendDto)
 
-	BOTTOMS_LONG	BOTTOMS	CASUAL	NORMAL	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F0b022f18-f1b5-48b1-a847-5f5b2550b7df%2F0b022f18-f1b5-48b1-a847-5f5b2550b7df?alt=media
-	TOPS_LONG	TOPS	CASUAL	S_THIN	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F144d4619-f9cc-4864-ae5f-2f571b3fea51%2F144d4619-f9cc-4864-ae5f-2f571b3fea51?alt=media
-	TOPS_LONG	TOPS	CASUAL	S_THICK	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F4e6f60b6-eb51-43b2-adcf-95309d923b30%2F4e6f60b6-eb51-43b2-adcf-95309d923b30?alt=media
-	TOPS_LONG	TOPS	CASUAL	S_THICK	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F6300265d-c8b2-484a-b6bc-53a04530888d%2F6300265d-c8b2-484a-b6bc-53a04530888d?alt=media
-	BOTTOMS_LONG	BOTTOMS	CASUAL	S_THIN	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F733c1866-c1ea-4792-ae77-cea436409914%2F733c1866-c1ea-4792-ae77-cea436409914?alt=media
+	#BOTTOMS_LONG	BOTTOMS	CASUAL	NORMAL	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F0b022f18-f1b5-48b1-a847-5f5b2550b7df%2F0b022f18-f1b5-48b1-a847-5f5b2550b7df?alt=media
+	#TOPS_LONG	TOPS	CASUAL	S_THIN	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F144d4619-f9cc-4864-ae5f-2f571b3fea51%2F144d4619-f9cc-4864-ae5f-2f571b3fea51?alt=media
+	#TOPS_LONG	TOPS	CASUAL	S_THICK	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F4e6f60b6-eb51-43b2-adcf-95309d923b30%2F4e6f60b6-eb51-43b2-adcf-95309d923b30?alt=media
+	#TOPS_LONG	TOPS	CASUAL	S_THICK	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F6300265d-c8b2-484a-b6bc-53a04530888d%2F6300265d-c8b2-484a-b6bc-53a04530888d?alt=media
+	#BOTTOMS_LONG	BOTTOMS	CASUAL	S_THIN	https://firebasestorage.googleapis.com/v0/b/coordikitty.appspot.com/o/clothes%2F733c1866-c1ea-4792-ae77-cea436409914%2F733c1866-c1ea-4792-ae77-cea436409914?alt=media
