@@ -69,49 +69,29 @@ temperature_range=[(28, float('inf')), (23, 27), (20, 22), (17, 19), (12, 16), (
 
 def load_closet(recommendDto: List[RecommendRequestDto]):
     closet = {"TOPS":[],"BOTTOMS":[]}
-    for cloth in recommendDto:
-        if(cloth.large=="TOPS"):
-            print()
-        elif(cloth.large=="BOTTOMS"):
-            print()
-    # json_files = [pos_json for pos_json in os.listdir(dir_path) if pos_json.endswith('.json')]
-    # for json_file in json_files:
-    #     file_path = os.path.join(dir_path, json_file)
-    #     with open(file_path,'r',encoding='utf-8') as file:
-    #         json_data = json.load(file)
-    #         large_category, extracted_data = extract_data_from_json(json_data)
-    #         closet[large_category].append(extracted_data)
+    for cloth_data in recommendDto:
+        cloth = {
+            "img_url": cloth_data.clothImages,
+            "medium_category": cloth_data.medium,
+            "thickness": cloth_data.thickness
+        }
+        closet[cloth_data.large].append(cloth)
     return closet
-
-def extract_data_from_json(json_data):
-    # 필요한 데이터만 추출하여 딕셔너리로 저장
-    
-    large_category = json_data.get("large_category")
-
-    extracted_data = {
-        "file_name": json_data.get("file_name"),
-        "medium_category": json_data.get("medium_category"),
-        "small_category": json_data.get("small_category"),
-        "thickness": json_data.get("thickness"),
-        "major_style": json_data.get("major_style"),
-        "minor_style": json_data.get("minor_style")
-    }
-    return large_category, extracted_data
 
 def cal_clothes_score(temperature, closet): #옷 점수 계산
     appropriate_clothes = {"TOPS": [], "BOTTOMS": []}
     clothes_score = {"TOPS":[],"BOTTOMS":[]}
-    temp_idx = 0
-    for i in range(len(temperature_range)):
-        if temperature_range[i][0]<=temperature<=temperature_range[i][1]:
-            temp_idx=i
+    current_temperature_idx = 0
+    for idx in range(len(temperature_range)):
+        if temperature_range[idx][0]<=temperature<=temperature_range[idx][1]:
+            current_temperature_idx=idx
             break
     for category, clothes in closet.items():
         for cloth in clothes:
             score = -float('inf')
-            for temp_range in temperature_ranges_by_cloth[cloth["medium_category"]][cloth["thickness"][0]]:
-                score = max(score,-abs(temp_idx-temperature_range.index(temp_range)))
-            if(score>=-1): #적정 온도 차이
+            for temp_range in temperature_ranges_by_cloth[cloth["medium_category"]][cloth["thickness"]]:
+                score = max(score,-abs(current_temperature_idx-temperature_range.index(temp_range)))
+            if(score>=-1): #현재 온도, 적정 온도 차이
                 appropriate_clothes[category].append(cloth)
                 clothes_score[category].append(score)
 
@@ -142,14 +122,18 @@ def preprocess_base_image(image_path):
         images.append((transform(image_[0]).unsqueeze(0),image_[1]))
     return images
 
-def preprocess_image(image_path):
+def preprocess_image(img_url):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    image = Image.open(image_path).convert('RGB')
+
+    image_data = BytesIO(requests.get(img_url).content)
+
+    image = Image.open(image_data).convert('RGB') #파이어베이스 url 접근으로 수정
     image=transform(image).unsqueeze(0)
+    
     return image
 
 # 디렉토리에서 이미지 경로 목록 가져오기
@@ -189,9 +173,8 @@ def detect_and_extract(image, conf_threshold=0.5):
     return clothes_images
 
 # 유사도 계산 및 상위 3개 결과 출력 함수
-def calculate_similarity(base_dir_path, cloth_file_names, dir_path):
+def calculate_similarity(base_images_path, cloth_urls):
     model = FeatureExtractor().eval()
-    base_images_path = get_image_paths(base_dir_path)
     base_images=[]
     for base_image_path in base_images_path:
         base_images.append(preprocess_base_image(base_image_path))
@@ -203,18 +186,23 @@ def calculate_similarity(base_dir_path, cloth_file_names, dir_path):
             temp.append((model(image_[0]),image_[1]))
         base_features_list.append(temp)
 
+    clothes_features = {"TOPS":[],"BOTTOMS":[]}
+    for cloth_url in cloth_urls["TOPS"]:
+        clothes_features["TOPS"].append((model(preprocess_image(cloth_url)),cloth_url))
+    for cloth_url in cloth_urls["BOTTOMS"]:
+        clothes_features["BOTTOMS"].append((model(preprocess_image(cloth_url)),cloth_url))
+    
     cos = nn.CosineSimilarity(dim=1, eps=1e-6)
     top3_coordi=[]
     for base_features in base_features_list:
         top2_images_TNB={"TOPS":[],"BOTTOMS":[]}
         for base_feature in base_features:
             similarity_scores = {}
-            for cloth_file_name in cloth_file_names[base_feature[1]]:
-                target_features = model(preprocess_image(dir_path+'/'+cloth_file_name))
-                similarity = cos(base_feature[0],target_features).item()
-                similarity_scores[cloth_file_name]=similarity
+            for target_feature in clothes_features[base_feature[1]]:
+                similarity = cos(base_feature[0],target_feature[0]).item()
+                similarity_scores[target_feature[1]]=similarity
             
-            for top_2_image in sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:1]: #상BOTTOMS 각각 유사도 top
+            for top_2_image in sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:1]: #상하의 각각 유사도 top
                 top2_images_TNB[base_feature[1]].append(top_2_image)
         
         top3_coordi_by_one_base=[]
@@ -237,7 +225,7 @@ def main(temperature, recommendDto: List[RecommendRequestDto]):
     user_style = recommendDto[0].style
     print()#
 
-    dir_path="사용자1옷장"
+    # dir_path="사용자1옷장"
     base_dir_path = "스타일 코디 모음집/"+user_style+'/'    # 최신 트렌드 반영 모델 사진 (풀착장)
 
     closet = load_closet(recommendDto)
@@ -247,20 +235,12 @@ def main(temperature, recommendDto: List[RecommendRequestDto]):
         print("현재 온도에 적합한 TOPS 또는 BOTTOMS가 없습니다.")
         return
     
-    # 스타일에 맞는 옷 필터링
-    suitable_clothes_by_style = {
-        "TOPS": [cloth for cloth in suitable_clothes_by_temperature["TOPS"] if cloth["major_style"] == user_style or cloth["minor_style"] == user_style],
-        "BOTTOMS": [cloth for cloth in suitable_clothes_by_temperature["BOTTOMS"] if cloth["major_style"] == user_style or cloth["minor_style"] == user_style]
-    }
-
-    if not (suitable_clothes_by_style["TOPS"] and suitable_clothes_by_style["BOTTOMS"]):
-        print("선택한 스타일에 적합한 TOPS 또는 BOTTOMS가 없습니다.")
-        return
-
-    cloth_file_names = {"TOPS":[cloth['file_name'] for cloth in suitable_clothes_by_style['TOPS']],
-                         "BOTTOMS":[cloth['file_name'] for cloth in suitable_clothes_by_style['BOTTOMS']]}
+    cloth_urls = {"TOPS":[cloth['img_url'] for cloth in suitable_clothes_by_temperature['TOPS']],
+                         "BOTTOMS":[cloth['img_url'] for cloth in suitable_clothes_by_temperature['BOTTOMS']]}
     
-    calculate_similarity(base_dir_path, cloth_file_names, dir_path)
+    base_images_path = get_image_paths(base_dir_path)
+
+    calculate_similarity(base_images_path, cloth_urls)
 
 if __name__ == "__main__":
     main()
