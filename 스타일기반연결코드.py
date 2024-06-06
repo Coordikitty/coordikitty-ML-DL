@@ -26,6 +26,9 @@ class RecommendRequestDto(BaseModel):
 class RecommendGetResponseDto(BaseModel):
     topImage: str
     bottomImage: str
+    def __init__(self, topImage, bottomImage):
+        self.topImage = topImage
+        self.bottomImage = bottomImage
 
 # YOLOv5 모델 로드
 yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path="상하의_detection_yolov5s.pt")
@@ -222,9 +225,9 @@ def calculate_similarity(base_images_path, cloth_urls):
     
     response=[]
     for top_coordi in top3_coordi[:3]:
-        coordi_data = RecommendGetResponseDto()
-        coordi_data.topImage = top_coordi[0]
-        coordi_data.bottomImage = top_coordi[1]
+        coordi_data = RecommendGetResponseDto(top_coordi[0],top_coordi[1])
+        # coordi_data.topImage = top_coordi[0]
+        # coordi_data.bottomImage = top_coordi[1]
         response.append(coordi_data)
     return response
     
