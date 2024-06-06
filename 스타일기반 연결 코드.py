@@ -133,7 +133,7 @@ def preprocess_image(img_url):
 
     image = Image.open(image_data).convert('RGB') #파이어베이스 url 접근으로 수정
     image=transform(image).unsqueeze(0)
-    
+
     return image
 
 # 디렉토리에서 이미지 경로 목록 가져오기
@@ -217,7 +217,9 @@ def calculate_similarity(base_images_path, cloth_urls):
 
     top3_coordi.sort(key=lambda x: x[-1],reverse=True) #전체 유사도 top
     for top_coordi in top3_coordi[:3]:
-        print(f"추천 코디:{top_coordi[0]}, {top_coordi[1]} / 점수: {top_coordi[2]}")
+        # response로 (top_coordi[0],top_coordi[1])리스트 넘기기
+        
+        print()
 
 def main(temperature, recommendDto: List[RecommendRequestDto]):
     #print("\n<스타일 목록>")
