@@ -23,6 +23,10 @@ class RecommendRequestDto(BaseModel):
     medium: str
     thickness: str
 
+class RecommendGetResponseDto(BaseModel):
+    topImage: str
+    bottomImage: str
+
 # YOLOv5 모델 로드
 yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path="상하의_detection_yolov5s.pt")
 yolo_model.to(device).eval()
@@ -171,7 +175,6 @@ def detect_and_extract(image, conf_threshold=0.5):
                 clothes_images.append((bottom_image,'BOTTOMS'))
     
     return clothes_images
-
 # 유사도 계산 및 상위 3개 결과 출력 함수
 def calculate_similarity(base_images_path, cloth_urls):
     model = FeatureExtractor().eval()
@@ -216,10 +219,14 @@ def calculate_similarity(base_images_path, cloth_urls):
         top3_coordi.append(top3_coordi_by_one_base[0])
 
     top3_coordi.sort(key=lambda x: x[-1],reverse=True) #전체 유사도 top
+    
+    response=[]
     for top_coordi in top3_coordi[:3]:
-        # response로 (top_coordi[0],top_coordi[1])리스트 넘기기
-        
-        print()
+        coordi_data = RecommendGetResponseDto()
+        coordi_data.topImage = top_coordi[0]
+        coordi_data.bottomImage = top_coordi[1]
+        response.append(coordi_data)
+    
 
 def main(temperature, recommendDto: List[RecommendRequestDto]):
     #print("\n<스타일 목록>")
