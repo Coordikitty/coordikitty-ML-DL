@@ -23,7 +23,7 @@ class RecommendRequestDto(BaseModel):
     medium: str
     thickness: str
 
-class RecommendGetResponseDto(BaseModel):
+class RecommendGetResponseDto():
     topImage: str
     bottomImage: str
     def __init__(self, topImage, bottomImage):
@@ -252,7 +252,8 @@ def main(temperature, recommendDto: List[RecommendRequestDto]):
     
     base_images_path = get_image_paths(base_dir_path)
 
-    calculate_similarity(base_images_path, cloth_urls)
+    response = calculate_similarity(base_images_path, cloth_urls)
+    return response
 
 if __name__ == "__main__":
     main()
