@@ -1,4 +1,22 @@
 # coordikitty-ML-DL
+### 개요
+- coordikitty는 사용자가 가진 의상에 기반해서 코디를 추천해주는 플랫폼을 개발하는 프로젝트
+
+### 팀원
+FE-WEB : [최은성](https://github.com/ches0703)  
+FE-APP : [최서연](https://github.com/SyeonC)  
+BE : [이태훈](https://github.com/Tentennball), [이호준](https://github.com/hotteok00)  
+ML/DL : [정민관](https://github.com/minganin99), [김채일](https://github.com/LES8638)  
+
+## :white_check_mark: 프로젝트 전체 구성도
+![서버 구조도 drawio](https://github.com/user-attachments/assets/8b86d819-5d9f-4baa-9d13-8df79ef3c201)
+
+### 주요 기능
+- 자신의 옷장에 있는 옷을 등록하여 해당 옷을 기반으로 날씨/스타일에 따라 코디를 추천받는 플랫폼
+- 자신의 코디를 post에 게시하여 커뮤니티 기능 활성화(개발중)
+- post에 있는 옷들 + 옷장에 있는 옷 기반으로 날씨/스타일에 따라 코디 추천(개발중)
+- 기본 auth기능(회원가입/로그인/로그아웃/회원탈퇴)
+
 # 패션 추천 시스템
 
 이 프로젝트는 Selenium을 사용하여 무신사에서 다양한 카테고리의 의류 이미지를 수집하고, 자동으로 라벨링 파일을 JSON 형식으로 생성. 또한, ResNeXt 아키텍처를 통해 수집된 의류 이미지를 학습하고, 입력된 이미지에 대해 스타일을 분류하는 모델을 구축.
