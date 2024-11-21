@@ -23,8 +23,8 @@
 - 이 과정에서 **YOLOv5 모델**을 사용하여 게시글의 상의와 하의를 분리.
 - **YOLOv5 모델**은 이미 사람의 상/하체를 분리하는 모델에서 상의/하의를 분리하는 모델로 전이학습
 
-![Uploading image.png…]()
 
+<img width="1442" alt="알고리즘 흐름도" src="https://github.com/user-attachments/assets/31e2c0c8-2727-43d1-a0a6-e5254ab069b0">
 
 
 의류 이미지 및 가중치 모델 공유 드라이브 주소 : https://drive.google.com/drive/folders/1pIK70Uv0jfjmizPITphCxT6ZFkU0Po6p
