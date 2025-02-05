@@ -45,4 +45,3 @@ ML/DL : [정민관](https://github.com/minganin99), [김채일](https://github.c
 <img width="1442" alt="알고리즘 흐름도" src="https://github.com/user-attachments/assets/31e2c0c8-2727-43d1-a0a6-e5254ab069b0">
 
 
-의류 이미지 및 가중치 모델 공유 드라이브 주소 : https://drive.google.com/drive/folders/1pIK70Uv0jfjmizPITphCxT6ZFkU0Po6p
